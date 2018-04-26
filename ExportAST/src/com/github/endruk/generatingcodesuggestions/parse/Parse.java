@@ -48,7 +48,7 @@ public class Parse{
 		}
 		this.scanner.resetFileCount();
 		try {
-			new NodeIterator(this.scanner.getNodeHandler(), file, targetDir).explore(JavaParser.parse(file));
+			new FileNodeIterator(this.scanner.getNodeHandler(), file, targetDir).explore(JavaParser.parse(file));
 		} catch(Exception e) {
 			new RuntimeException(e);
 			e.printStackTrace();
