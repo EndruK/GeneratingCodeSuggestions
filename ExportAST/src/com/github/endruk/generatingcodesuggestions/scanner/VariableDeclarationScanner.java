@@ -8,23 +8,29 @@ import java.util.Optional;
 import com.github.endruk.generatingcodesuggestions.astprinter.ASTPrinter;
 import com.github.endruk.generatingcodesuggestions.exceptions.NodeNotFoundException;
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
+import com.github.endruk.generatingcodesuggestions.interfaces.JavaparserTypeInterface;
 import com.github.endruk.generatingcodesuggestions.interfaces.NodeHandler;
 import com.github.endruk.generatingcodesuggestions.parse.NodeIterator;
 import com.github.endruk.generatingcodesuggestions.utils.Feature;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.IfStmt;
 
 public class VariableDeclarationScanner extends ASTNodeScanner {
 	
-	public VariableDeclarationScanner(ASTPrinter printer) {
-		super(printer);
+	public VariableDeclarationScanner(ASTPrinter printer,
+			String targetScanPackage,
+			String packagePosition) {
+		super(printer, targetScanPackage, packagePosition);
 		this.fileNodeHandler = new FileNodeHandler() {
 			
 			@Override
@@ -34,6 +40,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 					return false;
 				}
 				else {
+					if(node instanceof IfStmt) return false;
 					return true;
 				}
 			}
@@ -54,14 +61,14 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	
 	@Override
 	protected List<Feature> handleFeatures(Node node) throws NodeNotFoundException {
-		
 		if(node instanceof VariableDeclarationExpr) {
 			// features are prevVars & methods & method params & fields & imports 
 			return findVariableDeclarationFeatures((VariableDeclarationExpr)node);
 		}
 		else if(node instanceof FieldDeclaration) {
 			//TODO: implement this
-			return findFieldDeclarationFeatures(node);
+//			return findFieldDeclarationFeatures(node);
+			return null;
 		}
 		else {
 			throw new NodeNotFoundException("Node was neither VariableDeclarationExpr nor FieldDeclaration!");
@@ -69,53 +76,141 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	}
 	
 	private List<Feature> findVariableDeclarationFeatures(VariableDeclarationExpr node) {
-		//prevVars
+		//get parent method and parent class
 		Optional<MethodDeclaration> parentMethod = node.getAncestorOfType(MethodDeclaration.class);
-		List<Feature> prevVars = new ArrayList<Feature>();
-		if(parentMethod.isPresent()) {
-			MethodDeclaration method = parentMethod.get();
-			System.out.println("parent method: " + method.getName());
-			prevVars = getVariablesBeforeInMethod(method, node);
-		}
-		//printFeatureList(prevVars);
-		
-		// all visible methods
 		Optional<ClassOrInterfaceDeclaration> parentClassOp = node.getAncestorOfType(ClassOrInterfaceDeclaration.class);
-		List<Feature> visibleMethods = new ArrayList<Feature>();
-		if(parentClassOp.isPresent()) {
-			ClassOrInterfaceDeclaration parentClass = (ClassOrInterfaceDeclaration) parentClassOp.get();
-			System.out.println("parent class: " + parentClass.getNameAsString());
-			visibleMethods = getClassMembers(parentClass, node);
-		}
-		printFeatureList(visibleMethods);
-		// current method parameter
+		Optional<CompilationUnit> parentCompUnitOp = node.getAncestorOfType(CompilationUnit.class);
+		//lists for different features
+		List<Feature> prevVars           = new ArrayList<Feature>();
+		List<Feature> methodParams       = new ArrayList<Feature>();
+		List<Feature> visibleMethods     = new ArrayList<Feature>();
+		List<Feature> visibleFieldDecls  = new ArrayList<Feature>();
+		List<Feature> swingImportMethods = new ArrayList<Feature>();
+		List<Feature> swingImportFields  = new ArrayList<Feature>();
 		
-		// fields of class
+		//###################################################################
+		//all variables before the current variable
+		if(parentMethod.isPresent()) {
+			//do stuff with the parent method
+			MethodDeclaration method = parentMethod.get();
+			prevVars = getVariablesBeforeInMethod(method, node);
+			methodParams = getMethodParameter(method);
+		}
+		//###################################################################
+		// all visible methods and fields
+		
+		JavaparserTypeInterface methodTypeInterface = new JavaparserTypeInterface() {
+			
+			@Override
+			public boolean isClass(Node node) {
+				if(node instanceof MethodDeclaration) return true;
+				return false;
+			}
+			
+			@Override
+			public Feature getFeature(Node node) {
+				Feature f = new Feature();
+				f.type = getMethodType((MethodDeclaration) node);
+				f.content = getMethodName((MethodDeclaration) node);
+				return f;
+			}
+		};
+		JavaparserTypeInterface fieldTypeInterface = new JavaparserTypeInterface() {
+			
+			@Override
+			public boolean isClass(Node node) {
+				if(node instanceof FieldDeclaration) return true;
+				return false;
+			}
+			
+			@Override
+			public Feature getFeature(Node node) {
+				Feature f = new Feature();
+				f.type = getFieldType((FieldDeclaration) node);
+				f.content = getFieldName((FieldDeclaration) node);
+				return f;
+			}
+		};
+		if(parentClassOp.isPresent()) {
+			//do stuff with the parent class
+			ClassOrInterfaceDeclaration parentClass = (ClassOrInterfaceDeclaration) parentClassOp.get();
+			visibleMethods = getClassMembers(parentClass, node, methodTypeInterface);
+			visibleFieldDecls = getClassMembers(parentClass, node, fieldTypeInterface);
+		}
+		//###################################################################
+		//get the imports
+		if(parentCompUnitOp.isPresent()) {
+			//do stuff with the parent compilation unit
+			CompilationUnit parentCompUnit = (CompilationUnit)parentCompUnitOp.get();
+			List<Feature> imports = getImportFeatures(parentCompUnit);
+		}
+		
+		
+		//###################################################################
+		//print the stuff
+		
+		System.out.println("\n###############previous Variables:");
+		printFeatureList(prevVars);
+		System.out.println("\n###############current Method parameter:");
+		printFeatureList(methodParams);
+		System.out.println("\n###############visible Methods current Class:");
+		printFeatureList(visibleMethods);
+		System.out.println("\n###############visible Fields current Class:");
+		printFeatureList(visibleFieldDecls);
+		//###################################################################
 		
 		// imports
 		
 		return null;
 	}
-	private List<Feature> findFieldDeclarationFeatures(Node node) {
-		return null;
+	
+	private List<Feature> getImportFeatures(CompilationUnit unit) {
+		List<Feature> result = new ArrayList<Feature>();
+		List<ImportDeclaration> packageImports = getPackageImports(unit);
+		for(ImportDeclaration imp : packageImports) {
+			//dissolve import name
+			//is asterisk enabled? -> use all classes in the stated folder...
+			//get a list with the used class files
+			//iterate over class file list
+			//create fileNodeIterator for public fields and public methods
+			//export feature list on that
+		}
+		return result;
 	}
 	
-	private List<Feature> getClassMembers(ClassOrInterfaceDeclaration cl, VariableDeclarationExpr origNode) {
+	private List<ImportDeclaration> getPackageImports(CompilationUnit unit) {
+		NodeList<ImportDeclaration> allImports = unit.getImports();
+		NodeList<ImportDeclaration> packageImports = new NodeList<ImportDeclaration>();
+		for(ImportDeclaration imp : allImports) {
+			if(imp.getName().toString().contains(this.targetScanPackage)) {
+				packageImports.add(imp);
+//				if(imp.isAsterisk()) System.out.println(imp.getName() + ".*");
+//				else System.out.println(imp.getName());
+			}
+		}
+		return packageImports;
+	}
+	
+	private List<Feature> getMethodParameter(MethodDeclaration method) {
+		List<Feature> result = new ArrayList<Feature>();
+		NodeList<Parameter> parameters = method.getParameters();
+		for(Parameter parameter : parameters) {
+			Feature f = new Feature();
+			f.type = parameter.getType().asString();
+			f.content = parameter.getName().asString();
+			result.add(f);
+		}
+		return result;
+	}
+	
+	private List<Feature> getClassMembers(ClassOrInterfaceDeclaration cl, 
+			VariableDeclarationExpr origNode, 
+			JavaparserTypeInterface typeInterface) {
 		List<Feature> result = new ArrayList<Feature>(); 
 		NodeList<BodyDeclaration<?>> members = cl.getMembers();
 		for(BodyDeclaration<?> decl : members) {
-			if(decl instanceof MethodDeclaration) {
-				//System.out.println(decl);
-				Feature f = new Feature();
-				f.type = getMethodType((MethodDeclaration) decl);
-				f.content = getMethodName((MethodDeclaration) decl);
-				result.add(f);
-			}
-			else if(decl instanceof FieldDeclaration) {
-				//System.out.println(decl);
-				Feature f = new Feature();
-				f.type = getFieldType((FieldDeclaration) decl);
-				f.content = getFieldName((FieldDeclaration) decl);
+			if(typeInterface.isClass((Node)decl)) {
+				Feature f = typeInterface.getFeature((Node)decl);
 				result.add(f);
 			}
 		}

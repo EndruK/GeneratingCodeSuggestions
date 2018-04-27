@@ -11,8 +11,10 @@ import com.github.javaparser.ast.Node;
 
 public class CompilationUnitScanner extends ASTNodeScanner {
 
-	public CompilationUnitScanner(ASTPrinter printer) {
-		super(printer);
+	public CompilationUnitScanner(ASTPrinter printer,
+			String targetScanPackage,
+			String packagePosition) {
+		super(printer, targetScanPackage, packagePosition);
 		this.fileNodeHandler = new FileNodeHandler() {
 			
 			@Override

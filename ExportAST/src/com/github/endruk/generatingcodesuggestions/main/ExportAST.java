@@ -8,6 +8,9 @@ import com.github.endruk.generatingcodesuggestions.scanner.VariableDeclarationSc
 public class ExportAST {
 	private static YAMLPrinter yamlPrinterWithEscape = new YAMLPrinter(true);
 	private static YAMLPrinter yamlPrinterWithoutEscape = new YAMLPrinter(false);
+	
+	private static final String targetScanPackage = "javax.swing";
+	private static final String packagePosition = "/home/andre/Documents/SWING_SRC";
 
 	public static void main(String[] args) {
 		String corpusPath = "/media/andre/E896A5A496A573AA/Corpora/Java/Swing/Anne_Peter/Swing_Classes_Without_Comments";
@@ -47,7 +50,7 @@ public class ExportAST {
 		Setup test = new Setup(
 				"/home/andre/Documents/exporterTest/TestClass",
 				"/home/andre/Documents/exporterTest/TestOutput",
-				new VariableDeclarationScanner(yamlPrinterWithEscape));
+				new VariableDeclarationScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
 		test.execute(false);
 	}
 }

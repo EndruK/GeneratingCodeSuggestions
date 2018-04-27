@@ -16,12 +16,18 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 public abstract class ASTNodeScanner {
 	protected FileNodeHandler fileNodeHandler;
 	protected NodeHandler nodeHandler;
+	protected String targetScanPackage;
+	protected String packagePosition;
 	private ASTPrinter printer;
 	protected FeatureHandler featureHandler;
 	int fileNodeCount = 0;
 	
-	public ASTNodeScanner(ASTPrinter printer) {
+	public ASTNodeScanner(ASTPrinter printer,
+			String targetScanPackage,
+			String packagePosition) {
 		this.printer = printer;
+		this.targetScanPackage = targetScanPackage;
+		this.packagePosition = packagePosition;
 		this.featureHandler = new FeatureHandler() {
 			
 			@Override

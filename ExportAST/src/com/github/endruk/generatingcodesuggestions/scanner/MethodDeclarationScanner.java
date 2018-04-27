@@ -10,8 +10,10 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
 public class MethodDeclarationScanner extends ASTNodeScanner{
-	public MethodDeclarationScanner(ASTPrinter printer) {
-		super(printer);
+	public MethodDeclarationScanner(ASTPrinter printer,
+			String targetScanPackage,
+			String packagePosition) {
+		super(printer, targetScanPackage, packagePosition);
 		this.fileNodeHandler = new FileNodeHandler() {
 			
 			@Override
