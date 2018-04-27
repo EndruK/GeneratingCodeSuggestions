@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import com.github.endruk.generatingcodesuggestions.astprinter.ASTPrinter;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.Feature;
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
-import com.github.endruk.generatingcodesuggestions.utils.Feature;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 

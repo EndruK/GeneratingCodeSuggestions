@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.github.endruk.generatingcodesuggestions.astprinter.ASTPrinter;
 import com.github.endruk.generatingcodesuggestions.exceptions.NodeNotFoundException;
-import com.github.endruk.generatingcodesuggestions.interfaces.FeatureHandler;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.Feature;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.FeatureHandler;
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
 import com.github.endruk.generatingcodesuggestions.interfaces.NodeHandler;
-import com.github.endruk.generatingcodesuggestions.utils.Feature;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 

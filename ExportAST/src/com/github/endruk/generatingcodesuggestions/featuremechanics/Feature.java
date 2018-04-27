@@ -1,4 +1,4 @@
-package com.github.endruk.generatingcodesuggestions.utils;
+package com.github.endruk.generatingcodesuggestions.featuremechanics;
 
 public class Feature {
 	public String type;
