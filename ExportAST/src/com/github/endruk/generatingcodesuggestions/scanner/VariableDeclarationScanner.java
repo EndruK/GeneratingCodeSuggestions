@@ -7,11 +7,11 @@ import java.util.Optional;
 
 import com.github.endruk.generatingcodesuggestions.astprinter.ASTPrinter;
 import com.github.endruk.generatingcodesuggestions.exceptions.NodeNotFoundException;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.Feature;
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
 import com.github.endruk.generatingcodesuggestions.interfaces.JavaparserTypeInterface;
 import com.github.endruk.generatingcodesuggestions.interfaces.NodeHandler;
 import com.github.endruk.generatingcodesuggestions.parse.NodeIterator;
-import com.github.endruk.generatingcodesuggestions.utils.Feature;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
@@ -148,18 +148,17 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 		
 		//###################################################################
 		//print the stuff
-		
-		System.out.println("\n###############previous Variables:");
-		printFeatureList(prevVars);
-		System.out.println("\n###############current Method parameter:");
-		printFeatureList(methodParams);
-		System.out.println("\n###############visible Methods current Class:");
-		printFeatureList(visibleMethods);
-		System.out.println("\n###############visible Fields current Class:");
-		printFeatureList(visibleFieldDecls);
+		if(false) {
+			System.out.println("\n###############previous Variables:");
+			printFeatureList(prevVars);
+			System.out.println("\n###############current Method parameter:");
+			printFeatureList(methodParams);
+			System.out.println("\n###############visible Methods current Class:");
+			printFeatureList(visibleMethods);
+			System.out.println("\n###############visible Fields current Class:");
+			printFeatureList(visibleFieldDecls);
+		}
 		//###################################################################
-		
-		// imports
 		
 		return null;
 	}
@@ -168,7 +167,17 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 		List<Feature> result = new ArrayList<Feature>();
 		List<ImportDeclaration> packageImports = getPackageImports(unit);
 		for(ImportDeclaration imp : packageImports) {
+//			System.out.println(imp);
 			//dissolve import name
+			boolean isASterisk = imp.isAsterisk();
+			String importString = imp.getName().asString();
+			importString = importString.replace(this.targetScanPackage + ".", "");
+			importString = importString.replace(".", "/");
+			if(isASterisk) importString += "/*";
+			
+			String sourcePath = this.packagePosition + "/" + importString;
+
+			System.out.println(sourcePath);
 			//is asterisk enabled? -> use all classes in the stated folder...
 			//get a list with the used class files
 			//iterate over class file list
