@@ -8,9 +8,12 @@ import java.util.Optional;
 import com.github.endruk.generatingcodesuggestions.astprinter.ASTPrinter;
 import com.github.endruk.generatingcodesuggestions.exceptions.NodeNotFoundException;
 import com.github.endruk.generatingcodesuggestions.featuremechanics.Feature;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.ImportFileHandler;
+import com.github.endruk.generatingcodesuggestions.featuremechanics.ImportWildcardHandler;
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
 import com.github.endruk.generatingcodesuggestions.interfaces.JavaparserTypeInterface;
 import com.github.endruk.generatingcodesuggestions.interfaces.NodeHandler;
+import com.github.endruk.generatingcodesuggestions.interfaces.TargetHandler;
 import com.github.endruk.generatingcodesuggestions.parse.NodeIterator;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -173,16 +176,94 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 			String importString = imp.getName().asString();
 			importString = importString.replace(this.targetScanPackage + ".", "");
 			importString = importString.replace(".", "/");
-			if(isASterisk) importString += "/*";
+			//if(isASterisk) importString += "/*";
 			
 			String sourcePath = this.packagePosition + "/" + importString;
+			sourcePath += ".java";
 
 			System.out.println(sourcePath);
-			//is asterisk enabled? -> use all classes in the stated folder...
-			//get a list with the used class files
-			//iterate over class file list
-			//create fileNodeIterator for public fields and public methods
-			//export feature list on that
+			
+			if(isASterisk) {
+				// TODO: handle wildcard
+				//get all files in folder recursively
+				//build a file crawler
+				//iterate over all files
+				//build a node crawler
+				//extract all methods with tag public
+				//extract all fieldDecls with tag public
+				ImportWildcardHandler importWildcardHandler = new ImportWildcardHandler(sourcePath);
+				importWildcardHandler.extract();
+				result = importWildcardHandler.getAllFeatures();
+			}
+			else {
+				NodeHandler methodHandler = new NodeHandler() {
+					
+					@Override
+					public boolean handle(Node node) {
+						if(node instanceof MethodDeclaration) { //check if current node is a method
+							MethodDeclaration md = (MethodDeclaration) node;
+							if(md.isPublic()) { //check if method is public
+								return false; // return false to not explore the tree further
+							}
+						}
+						return true; //walk the tree further
+					}
+				};
+				NodeHandler fieldHandler = new NodeHandler() {
+					
+					@Override
+					public boolean handle(Node node) {
+						if(node instanceof FieldDeclaration) { //check if current node is field declaration
+							FieldDeclaration fd = (FieldDeclaration) node;
+							if(fd.isPublic()) { //check if field declaration is public
+								return false; // return false to not explore the tree further
+							}
+						}
+						return true; //walk the tree further
+					}
+				};
+				TargetHandler methodTargetHandler = new TargetHandler() { // what to do with the target nodes
+					@Override
+					public List<Feature> handleTargets(List<Node> targets) {
+						List<Feature> result = new ArrayList<Feature>();
+						for(Node n : targets) {
+							Feature f = new Feature();
+							MethodDeclaration m = (MethodDeclaration) n; //target nodes are method declarations
+							f.type = m.getType().asString(); // get type
+							f.content = m.getName().asString(); // get name
+							result.add(f);
+						}
+						return result;
+					}
+				};
+				TargetHandler fieldTargetHandler = new TargetHandler() { // what to do with the target nodes
+					@Override
+					public List<Feature> handleTargets(List<Node> targets) {
+						List<Feature> result = new ArrayList<Feature>();
+						for(Node n : targets) {
+							Feature f = new Feature();
+							FieldDeclaration fd = (FieldDeclaration) n; //target nodes are field declarations
+							//TODO: change this for more than one field declaration in one line
+							f.type = fd.getVariable(0).getType().asString(); //get the type of the first variable of the field
+							f.content = fd.getVariable(0).getName().asString(); //get the name of the first variable of the field
+							result.add(f);
+						}
+						return result;
+					}
+				};
+				//create a fileHandler for the imported library to scan for public methods and public fields
+				ImportFileHandler importFileHandlerMethod = new ImportFileHandler(sourcePath);
+				ImportFileHandler importFileHandlerField = new ImportFileHandler(sourcePath);
+				importFileHandlerMethod.extract(methodHandler, methodTargetHandler);// extract public methods
+				importFileHandlerField.extract(fieldHandler, fieldTargetHandler);// extract public fields
+				List<Feature> publicMethods = importFileHandlerMethod.getAllFeatures();//get the result methods
+				List<Feature> publicFields = importFileHandlerField.getAllFeatures();//get the result fields
+				System.out.println("Methods: ");
+				printFeatureList(publicMethods);
+				System.out.println("Fields: ");
+				printFeatureList(publicFields);
+				
+			}
 		}
 		return result;
 	}
