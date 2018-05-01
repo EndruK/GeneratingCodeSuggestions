@@ -78,17 +78,17 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	}
 	
 	private List<Feature> findVariableDeclarationFeatures(VariableDeclarationExpr node) {
+		List<Feature> result = new ArrayList<Feature>();
 		//get parent method and parent class
 		Optional<MethodDeclaration> parentMethod = node.getAncestorOfType(MethodDeclaration.class);
 		Optional<ClassOrInterfaceDeclaration> parentClassOp = node.getAncestorOfType(ClassOrInterfaceDeclaration.class);
 		Optional<CompilationUnit> parentCompUnitOp = node.getAncestorOfType(CompilationUnit.class);
 		//lists for different features
-		List<Feature> prevVars           = new ArrayList<Feature>();
-		List<Feature> methodParams       = new ArrayList<Feature>();
-		List<Feature> visibleMethods     = new ArrayList<Feature>();
-		List<Feature> visibleFieldDecls  = new ArrayList<Feature>();
-		List<Feature> swingImportMethods = new ArrayList<Feature>();
-		List<Feature> swingImportFields  = new ArrayList<Feature>();
+		List<Feature> prevVars            = new ArrayList<Feature>();
+		List<Feature> methodParams        = new ArrayList<Feature>();
+		List<Feature> visibleMethods      = new ArrayList<Feature>();
+		List<Feature> visibleFieldDecls   = new ArrayList<Feature>();
+		List<Feature> swingImportFeatures = new ArrayList<Feature>();
 		
 		//###################################################################
 		//all variables before the current variable
@@ -144,32 +144,37 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 		if(parentCompUnitOp.isPresent()) {
 			//do stuff with the parent compilation unit
 			CompilationUnit parentCompUnit = (CompilationUnit)parentCompUnitOp.get();
-			List<Feature> imports = getImportFeatures(parentCompUnit);
+			swingImportFeatures = getImportFeatures(parentCompUnit);
 		}
 		
 		
 		//###################################################################
 		//print the stuff
-		if(false) {
-			System.out.println("\n###############previous Variables:");
-			printFeatureList(prevVars);
-			System.out.println("\n###############current Method parameter:");
-			printFeatureList(methodParams);
-			System.out.println("\n###############visible Methods current Class:");
-			printFeatureList(visibleMethods);
-			System.out.println("\n###############visible Fields current Class:");
-			printFeatureList(visibleFieldDecls);
-		}
+//		if(true) {
+//			System.out.println("\n###############previous Variables:");
+//			printFeatureList(prevVars);
+//			System.out.println("\n###############current Method parameter:");
+//			printFeatureList(methodParams);
+//			System.out.println("\n###############visible Methods current Class:");
+//			printFeatureList(visibleMethods);
+//			System.out.println("\n###############visible Fields current Class:");
+//			printFeatureList(visibleFieldDecls);
+//		}
 		//###################################################################
 		
-		return null;
+		//concatenate all features
+		result.addAll(prevVars);
+		result.addAll(methodParams);
+		result.addAll(visibleMethods);
+		result.addAll(visibleFieldDecls);
+		result.addAll(swingImportFeatures);
+		return result;
 	}
 	
 	private List<Feature> getImportFeatures(CompilationUnit unit) {
 		List<Feature> result = new ArrayList<Feature>();
 		List<ImportDeclaration> packageImports = getPackageImports(unit);
 		for(ImportDeclaration imp : packageImports) {
-//			System.out.println(imp);
 			//dissolve import name
 			boolean isASterisk = imp.isAsterisk();
 			String importString = imp.getName().asString();
@@ -182,16 +187,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 
 			System.out.println(sourcePath);
 			
-			if(isASterisk) {
-				// TODO: handle wildcard
-				//get all files in folder recursively
-				//build a file crawler
-				//iterate over all files
-				//build a node crawler
-				//extract all methods with tag public
-				//extract all fieldDecls with tag public
-
-				
+			if(isASterisk) {	
 				List<File> javaFiles = walkDir(new File(sourcePath), ".java");
 				for(File f : javaFiles) {
 					result.addAll(handleSingleDependencyFile(f.getAbsolutePath()));
