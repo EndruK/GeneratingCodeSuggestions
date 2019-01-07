@@ -49,10 +49,10 @@ public abstract class ASTNodeScanner {
 		this.fileNodeCount = 0;
 	}
 	
-	protected void exportNode(Node node, List<Node> methods, List<Node> variables, File file, File targetDir) {
+	protected void exportNode(Node node, File file, File targetDir) {
 		this.fileNodeCount += 1;
 		String className = file.getName();
-		String targetFilepath = targetDir + "/" + className + "." + String.valueOf(this.fileNodeCount);
+		String targetFilepath = targetDir + "/" + className + "." + String.valueOf(this.fileNodeCount) + ".ast";
 		printNodeToFile(node, targetFilepath);
 		if (node instanceof VariableDeclarationExpr) {
 			VariableDeclarationExpr e = (VariableDeclarationExpr) node;
@@ -60,11 +60,26 @@ public abstract class ASTNodeScanner {
 		}
 		// get features for node
 		List<Feature> features = featureHandler.getFeatures(node);
-		System.out.println();
+		String targetFeatureFilepath = targetDir + "/" + className + "." + String.valueOf(this.fileNodeCount) + ".features";
+		printFeaturesToFile(features, targetFeatureFilepath);
 	}
 	
 	private void printNodeToFile(Node node, String targetFilepath) {
 		this.printer.print(node, targetFilepath);
+	}
+	
+	private void printFeaturesToFile(List<Feature> features, String targetFilePath) {
+		this.printer.printFeatures(features, targetFilePath);
+	}
+	
+	/**
+	 * print a given feature list
+	 * @param list - the list of features
+	 */
+	protected static void printFeatureList(List<Feature> list) {
+		for(Feature f : list) {
+			System.out.println(f.toString());
+		}
 	}
 	
 	protected abstract List<Feature> handleFeatures(Node node) throws NodeNotFoundException;

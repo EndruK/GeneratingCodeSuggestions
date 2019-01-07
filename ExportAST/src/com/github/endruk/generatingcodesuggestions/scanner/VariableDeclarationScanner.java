@@ -36,9 +36,10 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 		this.fileNodeHandler = new FileNodeHandler() {
 			
 			@Override
-			public boolean handle(Node node, List<Node> methods, List<Node> variables, File file, File targetDir) {
-				if(node instanceof VariableDeclarationExpr || node instanceof FieldDeclaration) {
-					exportNode(node, methods, variables, file, targetDir);
+			public boolean handle(Node node, File file, File targetDir) {
+//				if(node instanceof VariableDeclarationExpr || node instanceof FieldDeclaration) {
+				if(node instanceof VariableDeclarationExpr) {
+					exportNode(node, file, targetDir);
 					return false;
 				}
 				else {
@@ -67,13 +68,8 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 			// features are prevVars & methods & method params & fields & imports 
 			return findVariableDeclarationFeatures((VariableDeclarationExpr)node);
 		}
-		else if(node instanceof FieldDeclaration) {
-			//TODO: implement this
-//			return findFieldDeclarationFeatures(node);
-			return null;
-		}
 		else {
-			throw new NodeNotFoundException("Node was neither VariableDeclarationExpr nor FieldDeclaration!");
+			throw new NodeNotFoundException("Node was no VariableDeclarationExpr!");
 		}
 	}
 	
@@ -178,24 +174,41 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 			//dissolve import name
 			boolean isASterisk = imp.isAsterisk();
 			String importString = imp.getName().asString();
+			
+			if(isASterisk) {
+				importString = importString.replace(this.targetScanPackage, "");
+			}
+			System.out.println("import string " + importString);
 			importString = importString.replace(this.targetScanPackage + ".", "");
 			importString = importString.replace(".", "/");
 			//if(isASterisk) importString += "/*";
-			
 			String sourcePath = this.packagePosition + "/" + importString;
-			sourcePath += ".java";
-
+			if(!isASterisk) {
+				sourcePath += ".java";
+			}
 			System.out.println(sourcePath);
-			
+			//TODO: reuse old asterisk imports
 			if(isASterisk) {	
 				List<File> javaFiles = walkDir(new File(sourcePath), ".java");
 				for(File f : javaFiles) {
-					result.addAll(handleSingleDependencyFile(f.getAbsolutePath()));
+					if(f.isFile()) {
+						result.addAll(handleSingleDependencyFile(f.getAbsolutePath()));
+					}
+					else {
+						System.out.println(imp);
+					}
 				}
 			}
 			else {
 				// import is no asterisk -- so it must be a single file
-				result = handleSingleDependencyFile(sourcePath);
+				//TODO: handle import of single methods
+				File f = new File(sourcePath);
+				if(f.isFile()) {
+					result = handleSingleDependencyFile(sourcePath);
+				}
+				else {
+					System.out.println(imp);
+				}
 			}
 		}
 		return result;
@@ -416,7 +429,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param expr - the variable declaration expression
 	 * @return - type of the variable declaration expression as string
 	 */
-	private String getVariableType(VariableDeclarationExpr expr) {
+	private static String getVariableType(VariableDeclarationExpr expr) {
 		//TODO: improve this for more than one type
 		return expr.getVariable(0).getType().asString();
 	}
@@ -426,7 +439,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param expr - the variable declaration expression
 	 * @return - identifier of the variable declaration expression as string
 	 */
-	private String getVariableName(VariableDeclarationExpr expr) {
+	private static String getVariableName(VariableDeclarationExpr expr) {
 		//TODO: improve this for more than one name
 		return expr.getVariable(0).getName().asString();
 	}
@@ -436,7 +449,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param decl - the method declaration
 	 * @return - return type of the method declaration as string
 	 */
-	private String getMethodType(MethodDeclaration decl) {
+	private static String getMethodType(MethodDeclaration decl) {
 		return decl.getType().asString();
 	}
 	
@@ -445,7 +458,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param decl - the method declaration
 	 * @return - identifier of the method declaration as string
 	 */
-	private String getMethodName(MethodDeclaration decl) {
+	private static String getMethodName(MethodDeclaration decl) {
 		return decl.getNameAsString();
 	}
 	
@@ -454,7 +467,7 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param decl - the field declaration
 	 * @return - type of the field declaration as string
 	 */
-	private String getFieldType(FieldDeclaration decl) {
+	private static String getFieldType(FieldDeclaration decl) {
 		//TODO: improve this for more than one type
 		return decl.getVariable(0).getType().asString();
 	}
@@ -464,18 +477,8 @@ public class VariableDeclarationScanner extends ASTNodeScanner {
 	 * @param decl - the field declaration
 	 * @return - identifier of the field declaration as string
 	 */
-	private String getFieldName(FieldDeclaration decl) {
+	private static String getFieldName(FieldDeclaration decl) {
 		//TODO: improve this for more than one name
 		return decl.getVariable(0).getName().asString();
-	}
-	
-	/**
-	 * print a given feature list
-	 * @param list - the list of features
-	 */
-	private void printFeatureList(List<Feature> list) {
-		for(Feature f : list) {
-			System.out.println(f.toString());
-		}
 	}
 }

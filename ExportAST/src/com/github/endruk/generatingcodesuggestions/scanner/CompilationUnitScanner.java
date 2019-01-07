@@ -18,9 +18,9 @@ public class CompilationUnitScanner extends ASTNodeScanner {
 		this.fileNodeHandler = new FileNodeHandler() {
 			
 			@Override
-			public boolean handle(Node node, List<Node> methods, List<Node> variables, File file, File targetDir) {
+			public boolean handle(Node node, File file, File targetDir) {
 				if(node instanceof CompilationUnit) {
-					exportNode(node, methods, variables, file, targetDir);
+					exportNode(node, file, targetDir);
 					return false;
 				}
 				else {

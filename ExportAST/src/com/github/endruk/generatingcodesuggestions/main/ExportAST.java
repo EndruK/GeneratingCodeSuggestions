@@ -13,44 +13,44 @@ public class ExportAST {
 	private static final String packagePosition = "/home/andre/Documents/SWING_SRC";
 
 	public static void main(String[] args) {
-		String corpusPath = "/media/andre/E896A5A496A573AA/Corpora/Java/Swing/Anne_Peter/Swing_Classes_Without_Comments";
+		String corpusPath = "/media/andre/E896A5A496A573AA/Corpora/AndreKarge_2018-04-25_Java_Swing_Code+AST/Java/Swing/Anne_Peter/Swing_Classes_Without_Comments";
 //		Setup setupVarEnc = new Setup(
 //				corpusPath, 
-//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/VariableDeclarationsFieldDeclarations_YAML_whitespaceEncoded",
-//				new VariableDeclarationScanner(yamlPrinterWithEscape));
-//		setupVarEnc.execute(false);
+//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/VariableDeclarations_YAML_whitespaceEncoded",
+//				new VariableDeclarationScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
+//		setupVarEnc.execute(true);
 //		Setup setupVarNoEnc = new Setup(
 //				corpusPath, 
-//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/VariableDeclarationsFieldDeclarations_YAML",
-//				new VariableDeclarationScanner(yamlPrinterWithoutEscape));
-//		setupVarNoEnc.execute(false);
-//		Setup setupMEnc = new Setup(
-//				corpusPath, 
-//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/MethodDeclarations_YAML_whitespaceEncoded",
-//				new MethodDeclarationScanner(yamlPrinterWithEscape));
-//		setupMEnc.execute(false);
-//		Setup setupMNoEnc = new Setup(
-//				corpusPath, 
-//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/MethodDeclarations_YAML",
-//				new MethodDeclarationScanner(yamlPrinterWithoutEscape));
-//		setupMNoEnc.execute(false);
+//				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/VariableDeclarations_YAML",
+//				new VariableDeclarationScanner(yamlPrinterWithoutEscape, targetScanPackage, packagePosition));
+//		setupVarNoEnc.execute(true);
+		Setup setupMEnc = new Setup(
+				corpusPath, 
+				"/media/andre/E896A5A496A573AA/Corpora/AndreKarge_2018-04-25_Java_Swing_Code+AST/AST/Swing/MethodDeclarations_YAML_whitespaceEncoded",
+				new MethodDeclarationScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
+		setupMEnc.execute(true);
+		Setup setupMNoEnc = new Setup(
+				corpusPath, 
+				"/media/andre/E896A5A496A573AA/Corpora/AndreKarge_2018-04-25_Java_Swing_Code+AST/AST/Swing/MethodDeclarations_YAML",
+				new MethodDeclarationScanner(yamlPrinterWithoutEscape, targetScanPackage, packagePosition));
+		setupMNoEnc.execute(true);
 //		Setup setupCompUEnc = new Setup(
 //				corpusPath,
 //				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/CompilationUnit_YAML_whitespaceEncoded",
-//				new CompilationUnitScanner(yamlPrinterWithEscape));
+//				new CompilationUnitScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
 //		setupCompUEnc.execute(true);
 //		
 //		Setup setupCompUNoEnc = new Setup(
 //				corpusPath,
 //				"/media/andre/E896A5A496A573AA/Corpora/AST/Swing/CompilationUnit_YAML",
-//				new CompilationUnitScanner(yamlPrinterWithoutEscape));
+//				new CompilationUnitScanner(yamlPrinterWithoutEscape, targetScanPackage, packagePosition));
 //		setupCompUNoEnc.execute(true);
 		
 		
-		Setup test = new Setup(
-				"/home/andre/Documents/exporterTest/TestClass",
-				"/home/andre/Documents/exporterTest/TestOutput",
-				new VariableDeclarationScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
-		test.execute(false);
+//		Setup test = new Setup(
+//				"/home/andre/Documents/exporterTest/TestClass",
+//				"/home/andre/Documents/exporterTest/TestOutput",
+//				new VariableDeclarationScanner(yamlPrinterWithEscape, targetScanPackage, packagePosition));
+//		test.execute(false);
 	}
 }

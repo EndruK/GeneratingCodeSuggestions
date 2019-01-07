@@ -20,7 +20,7 @@ public class FileWriter {
 		writeStringToFile(outputString, targetFile);
 	}
 	
-	public void createFolderIfNotExist(String dir) {
+	private void createFolderIfNotExist(String dir) {
 		File folder = new File(dir);
 		if(!folder.exists()) {
 			folder.mkdir();
@@ -34,6 +34,7 @@ public class FileWriter {
 	}
 	
 	private void writeStringToFile(String outputString, File outputFile) {
+		System.out.println(outputFile.getPath());
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new java.io.FileWriter(outputFile, true));

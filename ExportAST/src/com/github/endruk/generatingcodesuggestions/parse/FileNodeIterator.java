@@ -1,13 +1,8 @@
 package com.github.endruk.generatingcodesuggestions.parse;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.github.endruk.generatingcodesuggestions.interfaces.FileNodeHandler;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 
 /**
  * 
@@ -16,15 +11,10 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
  * <p>
  * NodeIterator is a class to handle what should happen at a node.
  * It has an interface to handle an incoming node
- * Members are:
- * - methods - a list of nodes indicating a method
- * - variables - a list of nodes indicating a variable
  * The explore function visits each child node of an incoming node recursively.
  * <p>
  */
 public class FileNodeIterator {
-	private List<Node> methods = new ArrayList<Node>();
-	private List<Node> variables = new ArrayList<Node>();
 	private FileNodeHandler fileNodeHandler;
 	private File file;
 	private File targetDir;
@@ -47,34 +37,10 @@ public class FileNodeIterator {
 	 * @param node
 	 */
 	public void explore(Node node) {
-		if(fileNodeHandler.handle(node, methods, variables, this.file, this.targetDir)) {
+		if(fileNodeHandler.handle(node, this.file, this.targetDir)) {
 			for(Node child : node.getChildNodes()) {
 				explore(child);
 			}
 		}
-		if(node instanceof MethodDeclaration) {
-			methods.add(node);
-		}
-		if(node instanceof VariableDeclarationExpr || node instanceof FieldDeclaration) {
-			// check if variable type is part of swing
-			// add variable to list
-			variables.add(node);
-		}
-	}
-	
-	/**
-	 * getter for methods
-	 * @return List of method nodes
-	 */
-	public List<Node> getMethods() {
-		return methods;
-	}
-	
-	/**
-	 * getter for variables
-	 * @return List of variable nodes
-	 */
-	public List<Node> getVariables() {
-		return variables;
 	}
 }
